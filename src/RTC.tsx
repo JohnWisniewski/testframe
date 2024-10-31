@@ -1,6 +1,7 @@
 // RTC.tsx
 import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
+import Button from 'react-bootstrap/Button';
 
 interface RTCProps {
     handleVisionResult: (detectedObjects: any[]) => void;  // Function to pass detected objects to parent
@@ -57,7 +58,7 @@ const RTC: React.FC<RTCProps> = ({ handleVisionResult }) => {
     const image = captureImage();
     if (image) {
       try {
-        const response = await axios.post('http://localhost:5000/api/detectObjects', {
+        const response = await axios.post('http://localhost:5001/api/detectObjects', {
           image,
         });
         const objects = response.data;  // Store detected objects
@@ -73,26 +74,41 @@ const RTC: React.FC<RTCProps> = ({ handleVisionResult }) => {
     <div>
       <video ref={videoRef} autoPlay playsInline style={{ width: '100%' }} />
       <br />
-      <button onClick={sendToVisionAPI}>Capture and Analyze</button>
+      <Button onClick={sendToVisionAPI}>Capture and Analyze</Button>
       {capturedImage && <img src={capturedImage} alt="Captured" style={{ width: '100%' }} />}
       {detectedObjects.length > 0 && (
         <div>
           <h3>Detected Objects:</h3>
           <ul>
-            {detectedObjects.map((obj, index) => (
+            {detectedObjects.map((obj, index) => {
+              const centerX = obj.boundingPoly.normalizedVertices.reduce((acc: number, vertex: any) => acc + vertex.x, 0) / obj.boundingPoly.normalizedVertices.length;
+              const centerY = obj.boundingPoly.normalizedVertices.reduce((acc: number, vertex: any) => acc + vertex.y, 0) / obj.boundingPoly.normalizedVertices.length;
+              const directionX = centerX > 0.5 ? ' Left' : ' Right';
+              const directionY = centerY > 0.5 ? ' Up' : ' Down';
+
+              return (
               <li key={index}>
-                {obj.name} - Confidence: {Math.round(obj.score * 100)}%
-                <br />
-                <strong>Bounding Box Coordinates:</strong>
+                <strong>{obj.name} - Confidence: {Math.round(obj.score * 100)}%</strong>
                 <ul>
-                  {obj.boundingPoly.normalizedVertices.map((vertex: any, vIndex: number) => (
-                    <li key={vIndex}>
-                      x: {vertex.x}, y: {vertex.y}
-                    </li>
-                  ))}
+                <li>
+                  Center:
+                  x: {centerX},
+                  y: {centerY}
+                </li>
+                <li>
+                  {Math.abs(centerX - 0.5) < 0.1 && Math.abs(centerY - 0.5) < 0.1 ? 'Object is in the center' : 'Object is not in the center'}
+                </li>
+                {!(Math.abs(centerX - 0.5) < 0.1 && Math.abs(centerY - 0.5) < 0.1) && (
+                  <li>
+                  Directions to center:  
+                  {Math.abs(centerY - 0.5) < 0.2 ? ' Slightly ' : ''}{directionY} and 
+                  {Math.abs(centerX - 0.5) < 0.2 ? ' Slightly ' : ' '}{directionX}
+                  </li>
+                )}
                 </ul>
               </li>
-            ))}
+              );
+            })}
           </ul>
         </div>
       )}
