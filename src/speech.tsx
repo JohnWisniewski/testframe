@@ -1,4 +1,5 @@
 // Speech.tsx
+import Button from 'react-bootstrap/Button';
 
 import React, { useState, useEffect } from 'react';
 declare global {
@@ -58,8 +59,8 @@ const SpeechToText: React.FC<SpeechToTextProps> = ({ handleTranscript }) => {
   return (
     <div>
       <h2>Speech to Text</h2>
-      <button onClick={startListening}>Start Listening</button>
-      <button onClick={stopListening}>Stop Listening</button>
+      <Button onClick={startListening}>Start Listening</Button>
+      <Button onClick={stopListening}>Stop Listening</Button>
       <p>{transcript ? `Transcript: ${transcript}` : 'No speech recognized yet.'}</p>
     </div>
   );
